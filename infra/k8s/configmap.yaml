@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payflow-config
+data:
+  PORT: "8080"
+  ALLOWED_ORIGINS: "http://localhost"
+  DEMO_MODE: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+data:
+  MYSQL_DATABASE: payflow
+  MYSQL_USER: payflow
+

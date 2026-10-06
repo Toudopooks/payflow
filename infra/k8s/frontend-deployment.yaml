@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payflow-frontend
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: payflow-frontend } }
+  template:
+    metadata: { labels: { app: payflow-frontend } }
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/your-github-user/payflow-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 80 }]
+          readinessProbe: { httpGet: { path: /, port: http }, initialDelaySeconds: 3, periodSeconds: 5 }
+          resources: { requests: { cpu: 25m, memory: 32Mi }, limits: { cpu: 250m, memory: 128Mi } }
+

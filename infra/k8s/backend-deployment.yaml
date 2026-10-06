@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payflow-backend
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: payflow-backend } }
+  template:
+    metadata: { labels: { app: payflow-backend } }
+    spec:
+      initContainers:
+        - name: migrations
+          image: migrate/migrate:v4.19.0
+          args: ["-path", "/migrations", "-database", "$(DATABASE_DSN_MIGRATE)", "up"]
+          env:
+            - name: DATABASE_DSN_MIGRATE
+              valueFrom: { secretKeyRef: { name: payflow-secrets, key: DATABASE_DSN_MIGRATE } }
+          volumeMounts: [{ name: migrations, mountPath: /migrations }]
+      containers:
+        - name: api
+          image: ghcr.io/your-github-user/payflow-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8080 }]
+          envFrom:
+            - configMapRef: { name: payflow-config }
+          env:
+            - name: DATABASE_DSN
+              valueFrom: { secretKeyRef: { name: payflow-secrets, key: DATABASE_DSN } }
+          readinessProbe: { httpGet: { path: /health, port: http }, initialDelaySeconds: 5, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /health, port: http }, initialDelaySeconds: 15, periodSeconds: 10 }
+          resources: { requests: { cpu: 50m, memory: 64Mi }, limits: { cpu: 500m, memory: 256Mi } }
+      volumes:
+        - name: migrations
+          configMap: { name: payflow-migrations }
+

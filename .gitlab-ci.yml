@@ -1,0 +1,75 @@
+stages: [lint, test, integration, build]
+
+default:
+  interruptible: true
+
+go-lint:
+  stage: lint
+  image: golang:1.26
+  script:
+    - cd backend
+    - test -z "$(gofmt -l .)"
+    - go vet ./...
+
+frontend-lint:
+  stage: lint
+  image: node:24
+  script:
+    - cd frontend
+    - npm ci
+    - npm run lint
+  cache:
+    key: npm-${CI_COMMIT_REF_SLUG}
+    paths: [frontend/node_modules/]
+
+backend-unit:
+  stage: test
+  image: golang:1.26
+  script:
+    - cd backend
+    - go test -race -coverprofile=coverage.out ./internal/...
+  artifacts:
+    paths: [backend/coverage.out]
+
+frontend-test:
+  stage: test
+  image: node:24
+  script:
+    - cd frontend
+    - npm ci
+    - npm test
+
+backend-integration:
+  stage: integration
+  image: golang:1.26
+  services:
+    - name: mysql:8.4
+      alias: mysql
+  variables:
+    MYSQL_DATABASE: payflow_test
+    MYSQL_USER: payflow
+    MYSQL_PASSWORD: payflow_test_password
+    MYSQL_ROOT_PASSWORD: root_test_password
+    TEST_DATABASE_DSN: "payflow:payflow_test_password@tcp(mysql:3306)/payflow_test?parseTime=true&multiStatements=true"
+  script:
+    - cd backend
+    - go test -count=1 ./tests/integration
+
+backend-build:
+  stage: build
+  image: golang:1.26
+  script:
+    - cd backend
+    - CGO_ENABLED=0 go build -o payflow-api ./cmd/api
+  artifacts:
+    paths: [backend/payflow-api]
+
+frontend-build:
+  stage: build
+  image: node:24
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths: [frontend/dist/]

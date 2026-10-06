@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-payflow}
+      MYSQL_USER: ${MYSQL_USER:-payflow}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-payflow-local}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root-local}
+    ports: ["3306:3306"]
+    volumes: ["mysql-data:/var/lib/mysql"]
+    healthcheck: { test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD}"], interval: 5s, timeout: 3s, retries: 20 }
+  migrate:
+    image: migrate/migrate:v4.19.0
+    volumes: ["./backend/migrations:/migrations:ro"]
+    command: ["-path", "/migrations", "-database", "mysql://${MYSQL_USER:-payflow}:${MYSQL_PASSWORD:-payflow-local}@tcp(mysql:3306)/${MYSQL_DATABASE:-payflow}", "up"]
+    depends_on: { mysql: { condition: service_healthy } }
+    restart: "no"
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_DSN: ${DATABASE_DSN:-payflow:payflow-local@tcp(mysql:3306)/payflow?parseTime=true&multiStatements=true}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      DEMO_MODE: ${DEMO_MODE:-true}
+    ports: ["8080:8080"]
+    depends_on: { mysql: { condition: service_healthy }, migrate: { condition: service_completed_successfully } }
+    healthcheck: { test: ["CMD", "/payflow-api", "healthcheck"], interval: 10s, timeout: 3s, retries: 5 }
+  frontend:
+    build: ./frontend
+    ports: ["3000:80"]
+    depends_on: { backend: { condition: service_started } }
+  prometheus:
+    image: prom/prometheus:v3.7.1
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes: ["./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    depends_on: [backend]
+  grafana:
+    image: grafana/grafana:12.2.0
+    environment: { GF_SECURITY_ADMIN_USER: admin, GF_SECURITY_ADMIN_PASSWORD: payflow-local, GF_USERS_ALLOW_SIGN_UP: "false" }
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3001:3000"]
+    depends_on: [prometheus]
+volumes: { mysql-data: {} }

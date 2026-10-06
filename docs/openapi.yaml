@@ -1,0 +1,161 @@
+openapi: 3.0.3
+info:
+  title: PayFlow API
+  version: 0.1.0
+  description: Simulated installment payment API. Amounts use integer minor units.
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /customers:
+    post:
+      summary: Create a customer
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CreateCustomer' } } } }
+      responses:
+        '201': { description: Customer created, content: { application/json: { schema: { $ref: '#/components/schemas/Customer' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /customers/{id}:
+    get:
+      summary: Get a customer
+      parameters: [{ $ref: '#/components/parameters/ID' }]
+      responses:
+        '200': { description: Customer, content: { application/json: { schema: { $ref: '#/components/schemas/Customer' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /customers/{id}/transactions:
+    get:
+      summary: List customer transaction events
+      parameters:
+        - { $ref: '#/components/parameters/ID' }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: page_size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200': { description: Paginated events, content: { application/json: { schema: { $ref: '#/components/schemas/TransactionPage' } } } }
+  /merchants:
+    post:
+      summary: Create a merchant
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [name], properties: { name: { type: string } } } } } }
+      responses:
+        '201': { description: Merchant created }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /merchants/{id}:
+    get:
+      summary: Get a merchant
+      parameters: [{ $ref: '#/components/parameters/ID' }]
+      responses:
+        '200': { description: Merchant }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /orders:
+    get:
+      summary: List 100 recent orders
+      responses: { '200': { description: Orders } }
+    post:
+      summary: Create an order
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CreateOrder' } } } }
+      responses:
+        '201': { description: Order created, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /orders/{id}:
+    get:
+      summary: Get an order and its plan
+      parameters: [{ $ref: '#/components/parameters/ID' }]
+      responses:
+        '200': { description: Order, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /orders/{id}/installments:
+    get:
+      summary: List order installments
+      parameters: [{ $ref: '#/components/parameters/ID' }]
+      responses: { '200': { description: Installments }, '404': { $ref: '#/components/responses/NotFound' } }
+  /payment-plans:
+    post:
+      summary: Create a 2, 3, or 4 installment plan
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [order_id, installment_count], properties: { order_id: { type: string, format: uuid }, installment_count: { type: integer, enum: [2, 3, 4] } } } } } }
+      responses:
+        '201': { description: Plan created, content: { application/json: { schema: { $ref: '#/components/schemas/Plan' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /payment-plans/{id}:
+    get:
+      summary: Get a payment plan
+      parameters: [{ $ref: '#/components/parameters/ID' }]
+      responses: { '200': { description: Plan }, '404': { $ref: '#/components/responses/NotFound' } }
+  /payments:
+    post:
+      summary: Create an idempotent payment attempt
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, maxLength: 128 }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CreatePayment' } } } }
+      responses:
+        '201': { description: Payment created, content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } }
+        '200': { description: Original payment returned for an identical replay, headers: { Idempotency-Replayed: { schema: { type: string, enum: ['true'] } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { description: Key conflict or paid installment, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '422': { description: Amount does not match installment, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /installments/{id}/pay:
+    post:
+      summary: Pay a specific installment
+      parameters:
+        - { $ref: '#/components/parameters/ID' }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, maxLength: 128 } }
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [amount], properties: { amount: { type: integer, minimum: 1 }, simulate_failure: { type: boolean, default: false } } } } } }
+      responses: { '201': { description: Payment created }, '200': { description: Idempotent replay }, '409': { description: Conflict }, '422': { description: Invalid amount } }
+  /payments/{id}:
+    get:
+      summary: Get a payment
+      parameters: [{ $ref: '#/components/parameters/ID' }]
+      responses:
+        '200': { description: Payment, content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /payments/{id}/refunds:
+    post:
+      summary: Refund some or all of a successful payment
+      parameters: [{ $ref: '#/components/parameters/ID' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [amount, reason], properties: { amount: { type: integer, minimum: 1 }, reason: { type: string } } } } } }
+      responses:
+        '201': { description: Refund created }
+        '409': { description: Payment is not refundable }
+        '422': { description: Refund exceeds the remaining amount }
+components:
+  parameters:
+    ID: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+  responses:
+    BadRequest: { description: Invalid input, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    NotFound: { description: Resource not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  schemas:
+    CreateCustomer:
+      type: object
+      required: [name, email]
+      properties: { name: { type: string }, email: { type: string, format: email } }
+    Customer:
+      type: object
+      required: [id, name, email, created_at]
+      properties: { id: { type: string, format: uuid }, name: { type: string }, email: { type: string, format: email }, created_at: { type: string, format: date-time } }
+    CreateOrder:
+      type: object
+      required: [customer_id, merchant_id, amount, currency]
+      properties: { customer_id: { type: string, format: uuid }, merchant_id: { type: string, format: uuid }, amount: { type: integer, minimum: 1 }, currency: { type: string, enum: [USD, CLP] } }
+    Order:
+      type: object
+      required: [id, reference, customer_id, merchant_id, amount, currency, status]
+      properties: { id: { type: string, format: uuid }, reference: { type: string }, customer_id: { type: string }, merchant_id: { type: string }, amount: { type: integer }, currency: { type: string }, status: { type: string }, payment_plan: { $ref: '#/components/schemas/Plan' } }
+    Plan:
+      type: object
+      properties: { id: { type: string }, order_id: { type: string }, installment_count: { type: integer }, status: { type: string }, installments: { type: array, items: { $ref: '#/components/schemas/Installment' } } }
+    Installment:
+      type: object
+      properties: { id: { type: string }, payment_plan_id: { type: string }, sequence: { type: integer }, amount: { type: integer }, status: { type: string, enum: [pending, paid, failed, refunded] }, due_at: { type: string, format: date-time } }
+    CreatePayment:
+      type: object
+      required: [installment_id, amount]
+      properties: { installment_id: { type: string, format: uuid }, amount: { type: integer, minimum: 1 }, simulate_failure: { type: boolean, description: Accepted only when demo mode is enabled. } }
+    Payment:
+      type: object
+      properties: { id: { type: string }, installment_id: { type: string }, amount: { type: integer }, currency: { type: string }, status: { type: string, enum: [pending, succeeded, failed, refunded] }, failure_reason: { type: string }, refunded_amount: { type: integer }, created_at: { type: string, format: date-time } }
+    TransactionPage:
+      type: object
+      properties: { data: { type: array, items: { type: object } }, page: { type: integer }, page_size: { type: integer }, total: { type: integer }, total_pages: { type: integer } }
+    Error:
+      type: object
+      required: [error]
+      properties: { error: { type: object, required: [code, message], properties: { code: { type: string }, message: { type: string } } } }

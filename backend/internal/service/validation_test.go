@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/santi/payflow/backend/internal/domain"
+	"github.com/Toudopooks/payflow/backend/internal/domain"
 )
 
 func TestValidationRejectsInvalidPublicInput(t *testing.T) {

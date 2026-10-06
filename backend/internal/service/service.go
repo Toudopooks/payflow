@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Toudopooks/payflow/backend/internal/domain"
+	"github.com/Toudopooks/payflow/backend/internal/repository"
 	"github.com/google/uuid"
-	"github.com/santi/payflow/backend/internal/domain"
-	"github.com/santi/payflow/backend/internal/repository"
 )
 
 type Service struct {

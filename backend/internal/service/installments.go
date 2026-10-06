@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Toudopooks/payflow/backend/internal/domain"
 	"github.com/google/uuid"
-	"github.com/santi/payflow/backend/internal/domain"
 )
 
 func BuildInstallments(planID string, total int64, count int, firstDue time.Time) ([]domain.Installment, error) {

@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Toudopooks/payflow/backend/internal/domain"
+	mysqlstore "github.com/Toudopooks/payflow/backend/internal/repository/mysql"
+	"github.com/Toudopooks/payflow/backend/internal/service"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
-	"github.com/santi/payflow/backend/internal/domain"
-	mysqlstore "github.com/santi/payflow/backend/internal/repository/mysql"
-	"github.com/santi/payflow/backend/internal/service"
 )
 
 func TestPaymentIdempotencyAndRefund(t *testing.T) {

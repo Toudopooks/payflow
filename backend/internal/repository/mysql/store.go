@@ -9,10 +9,10 @@ import (
 	"math"
 	"time"
 
+	"github.com/Toudopooks/payflow/backend/internal/domain"
+	"github.com/Toudopooks/payflow/backend/internal/repository"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
-	"github.com/santi/payflow/backend/internal/domain"
-	"github.com/santi/payflow/backend/internal/repository"
 )
 
 type Store struct{ db *sql.DB }

@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS idempotency_keys;
+DROP TABLE IF EXISTS transaction_events;
+DROP TABLE IF EXISTS refunds;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS installments;
+DROP TABLE IF EXISTS payment_plans;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS merchants;
+DROP TABLE IF EXISTS customers;

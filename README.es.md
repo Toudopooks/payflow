@@ -56,7 +56,7 @@ La interfaz tiene un enfoque operativo, no de checkout: los IDs, estados, montos
 Se necesita Docker con el plugin de Compose y Make.
 
 ```bash
-git clone https://github.com/Toudopooks/payflow.git
+git clone https://github.com/DevPooks/payflow.git
 cd payflow
 cp .env.example .env
 docker compose up --build
@@ -257,4 +257,4 @@ El siguiente paso con valor real sería implementar resultados asíncronos media
 
 ## Licencia
 
-[MIT](./LICENSE) © [Toudopooks](https://github.com/Toudopooks)
+[MIT](./LICENSE) © [DevPooks](https://github.com/DevPooks)

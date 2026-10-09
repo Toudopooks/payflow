@@ -56,7 +56,7 @@ The interface is intentionally operational rather than checkout-oriented: IDs, s
 You need Docker with the Compose plugin and Make.
 
 ```bash
-git clone https://github.com/Toudopooks/payflow.git
+git clone https://github.com/DevPooks/payflow.git
 cd payflow
 cp .env.example .env
 docker compose up --build
@@ -257,4 +257,4 @@ The next meaningful step would be asynchronous payment outcomes through an outbo
 
 ## License
 
-[MIT](./LICENSE) © [Toudopooks](https://github.com/Toudopooks)
+[MIT](./LICENSE) © [DevPooks](https://github.com/DevPooks)

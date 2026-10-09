@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Toudopooks/payflow/backend/internal/domain"
-	"github.com/Toudopooks/payflow/backend/internal/repository"
+	"github.com/DevPooks/payflow/backend/internal/domain"
+	"github.com/DevPooks/payflow/backend/internal/repository"
 	"github.com/google/uuid"
 )
 

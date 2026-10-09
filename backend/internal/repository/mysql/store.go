@@ -9,8 +9,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/Toudopooks/payflow/backend/internal/domain"
-	"github.com/Toudopooks/payflow/backend/internal/repository"
+	"github.com/DevPooks/payflow/backend/internal/domain"
+	"github.com/DevPooks/payflow/backend/internal/repository"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 )

@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Toudopooks/payflow/backend/internal/domain"
-	mysqlstore "github.com/Toudopooks/payflow/backend/internal/repository/mysql"
-	"github.com/Toudopooks/payflow/backend/internal/service"
+	"github.com/DevPooks/payflow/backend/internal/domain"
+	mysqlstore "github.com/DevPooks/payflow/backend/internal/repository/mysql"
+	"github.com/DevPooks/payflow/backend/internal/service"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 )
